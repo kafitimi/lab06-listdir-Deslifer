@@ -2,14 +2,16 @@
 #include <stdio.h>
 #pragma warning( disable : 4996)
 
-static int count;
+static int count,folder;
 
-int main() {
+int main1() {
     	wchar_t s[512];              	// текущая папка
+		bool dir;
     	GetCurrentDirectory(512, s);	// получить текущую папку
     	wprintf(L"Starting in: %s\n", s);
 
-    	count = 0;                  	// обнулить счетчик файлов    	
+    	count = 0;                  	// обнулить счетчик файлов  
+		folder=0;
 		HANDLE hFind;
 		WIN32_FIND_DATA fileinfo;
 
@@ -17,8 +19,12 @@ int main() {
 		wprintf(L"%s\n", fileinfo.cFileName);
 		
 		do {
+		dir=(fileinfo.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY);
+		if (dir){
+			folder++;
+		}
     	count++; // некоторые файлы не считаются??
-    	wprintf(L"file #%d is <%s>\n", count, fileinfo.cFileName);
+    	wprintf(L"file #%d, dir=%d, name <%s>\n", count,dir, fileinfo.cFileName);
 
     	// ...
     	// здесь будет обход в глубину
@@ -28,7 +34,7 @@ int main() {
 
         //dfs();                     	// запустить обход в глубину
    	 
-    	wprintf(L"File count = %d\n", count);
+    	wprintf(L"File count = %d, Folder count = %d\n", count,folder);
     	return 0;
 }
 
@@ -50,3 +56,7 @@ int main() {
 	FindClose(hFind);
 }
 */
+int main(){
+	main1();
+
+}
