@@ -2,8 +2,9 @@
 #include <stdio.h>
 #pragma warning( disable : 4996)
 
-static int count,folder,size;
+static int count,folder,file,size;
 bool dir,zx;
+wchar_t d1,d2;
 
 /*int main1() {
     	wchar_t s[512];              	// текущая папка
@@ -52,31 +53,39 @@ void dfs() {
     // 2) если папка, то заходим в нее и вызываем dfs
     // 3) если файл, то посчитаем его в суммах count и size
     // 4) выходим в родительскую папку
-
+		wchar_t s[512];
 		HANDLE hFind;
 		WIN32_FIND_DATA fileinfo;
 
 		hFind=FindFirstFile(L"*", &fileinfo);
-		//wprintf(L"%s\n", fileinfo.cFileName);
-		
+		FindNextFile(hFind, &fileinfo);
+		FindNextFile(hFind, &fileinfo);
 		do {
-		dir=(fileinfo.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY);
-		if (dir){
-			folder++;
-		}
-    	count++; // некоторые файлы не считаются??
-		if (count>2){
-    	wprintf(L"file #%d, dir=%d, name <%s>\n", count-2,dir, fileinfo.cFileName);
-		}
+			count++;
+			size += fileinfo.nFileSizeLow;
+			dir=(fileinfo.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY);
+			if (dir) {
+				folder++;
+			}				 // некоторые файлы не считаются??
+			else
+				file++;
+			wprintf(L"file #%d, dir=%d, name <%s>, size=%d\n", count,dir,fileinfo.cFileName,fileinfo.nFileSizeLow);
+			if (dir) {       
+				SetCurrentDirectory(fileinfo.cFileName);
+				dfs();
+			}
 
     	// ...
     	// здесь будет обход в глубину
-	} while (FindNextFile(hFind, &fileinfo) != 0);
-	FindClose(hFind);
+		} while (FindNextFile(hFind, &fileinfo) != 0);
+		FindClose(hFind);
 
 
-        //dfs();                     	// запустить обход в глубину
-    SetCurrentDirectory(L"..");
+                  	// запустить обход в глубину
+   // SetCurrentDirectory(L"..");
+	//GetCurrentDirectory(512, s);
+	//dfs();
+
 }
 
 
@@ -86,14 +95,13 @@ int main(int argc, wchar_t* argv[]) {
     wchar_t s[512];               	// текущая папка
     GetCurrentDirectory(512, s);  	// получить текущую папку
     wprintf(L"Starting in: %s\n", s);
-	zx=1;
- 
     count = 0;                  	// обнулить счетчик файлов
     size = 0;                   	// обнулить суммарный размер файлов
 	folder=0;
+	file = 0;
     dfs();                      	// запустить обход в глубину из текущей папки
  
-    printf("File count = %d, folder count = %d, size = %lld\n", count,folder-2,size);
+    printf("File count = %d, folder count = %d, size = %d byte\n", file,folder,size);
     return 0;
 }
 
