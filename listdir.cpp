@@ -2,9 +2,10 @@
 #include <stdio.h>
 #pragma warning( disable : 4996)
 
-static int count,folder;
+static int count,folder,size;
+bool dir,zx;
 
-int main1() {
+/*int main1() {
     	wchar_t s[512];              	// текущая папка
 		bool dir;
     	GetCurrentDirectory(512, s);	// получить текущую папку
@@ -25,6 +26,12 @@ int main1() {
 		}
     	count++; // некоторые файлы не считаются??
     	wprintf(L"file #%d, dir=%d, name <%s>\n", count,dir, fileinfo.cFileName);
+		if (dir && count>2){
+			SetCurrentDirectory(s);
+			GetCurrentDirectory(512, s);
+			main1();
+
+		}
 
     	// ...
     	// здесь будет обход в глубину
@@ -36,27 +43,57 @@ int main1() {
    	 
     	wprintf(L"File count = %d, Folder count = %d\n", count,folder);
     	return 0;
-}
+}*/
 
 
-/*void dfs() {
-	HANDLE hFind;                   	// номер поиска
-	WIN32_FIND_DATA res;            	// результат поиска
+void dfs() {
+    // начинает перебор файлов и папок в текущей папке
+    // 1) папки . и .. пропускаем
+    // 2) если папка, то заходим в нее и вызываем dfs
+    // 3) если файл, то посчитаем его в суммах count и size
+    // 4) выходим в родительскую папку
 
-	CHAR dir[] = ".\\*";
-	hFind = FindFirstFile(dir, &res);   // найти первый файл
+		HANDLE hFind;
+		WIN32_FIND_DATA fileinfo;
 
-	do {
+		hFind=FindFirstFile(L"*", &fileinfo);
+		//wprintf(L"%s\n", fileinfo.cFileName);
+		
+		do {
+		dir=(fileinfo.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY);
+		if (dir){
+			folder++;
+		}
     	count++; // некоторые файлы не считаются??
-    	_tprintf(TEXT("file #%d is <%s>\n"), count, res.cFileName);
+		if (count>2){
+    	wprintf(L"file #%d, dir=%d, name <%s>\n", count-2,dir, fileinfo.cFileName);
+		}
 
     	// ...
     	// здесь будет обход в глубину
-	} while (FindNextFile(hFind, &res) != 0);
+	} while (FindNextFile(hFind, &fileinfo) != 0);
 	FindClose(hFind);
-}
-*/
-int main(){
-	main1();
 
+
+        //dfs();                     	// запустить обход в глубину
+    SetCurrentDirectory(L"..");
 }
+
+
+
+
+int main(int argc, wchar_t* argv[]) {
+    wchar_t s[512];               	// текущая папка
+    GetCurrentDirectory(512, s);  	// получить текущую папку
+    wprintf(L"Starting in: %s\n", s);
+	zx=1;
+ 
+    count = 0;                  	// обнулить счетчик файлов
+    size = 0;                   	// обнулить суммарный размер файлов
+	folder=0;
+    dfs();                      	// запустить обход в глубину из текущей папки
+ 
+    printf("File count = %d, folder count = %d, size = %lld\n", count,folder-2,size);
+    return 0;
+}
+
